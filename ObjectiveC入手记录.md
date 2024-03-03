@@ -380,9 +380,7 @@ int main(int argc, char* argv[]){
 }
 ```
 
-ps：对不起， 协议看起来还不像接口， 而是像kotlin 里的 by
-
-child.delegate 本质上就是nanny对象
+ps：不就是接口嘛， 那个delegate不就是一种多态的体现
 
 # 单例
 
@@ -907,7 +905,7 @@ int main(int argc, const char * argv[]) {
 
 # KVC & KVO
 
-
+## KVC
 
 KVC = Key - Value - Coding
 
@@ -939,5 +937,562 @@ int main(int argc, const char* argv[]) {
 
 输出: The person's name is :ZhangSan, and age is :10, sex is :1
 
-说白了，先开空间，然后在分配值， 类似java反射的createInstance()
+说白了，先开空间，然后在分配值， 空构造器呗
+
+
+
+*setValue:forKey*方法属于NSKeyValueCoding.h接口中的方法
+
+还可以使用valueForKey:方法获取对应属性名
+
+```objective-c
+NSLog(@"The person's name is :%@, and age is :%d, sex is :%d",
+     [person valueForKey:@"name"],
+     [[person valueForKey:@"age"] intValue],
+     [[person valueForKey:@"sex"] boolValue]);
+```
+
+(由于取出的value为对象， 需要转化一下)
+
+```objective-c
+#import <Foundation/Foundation.h>
+#import "Person.h"
+
+int main(int argc, const char* argv[]) {
+    Person * person = [[Person alloc] init];
+    NSMutableDictionary * dic = [[NSMutableDictionary alloc] init];
+    [dic setValue: @"ZhangSan", forKey: @"name"];
+    [dic setValue: [NSNumber numberWithInt: 10] forKey:@"age"];
+    [dic setValue: [NSNumber numberWithBool: YES] forKey: @"sex"];
+    [person setValuesForKeysWithDictionary: dic];
+    NSLog(@"The person's name is :%@, and age is :%d, sex is %d",
+         [person valueForKey: @"name"],
+         [[person valueForKey: @"age"] intValue],
+         [[person valueForKey: @"sex"] boolValue]);
+}
+```
+
+emmm, 根据键值对来生成对象， 像是json解析技术一样？
+
+## KVO
+
+KVO = Key-Value-Observer
+
+观察者模式？
+
+Person.h
+
+```objective-c
+#import <Foundation/Foundation.h>
+@interface Person: NSObject
+@property (nonatomic, copy) NSString * name;
+@property (nonatomic, assign) int age;
+@end
+```
+
+Person.m
+
+```objective-c
+#import "Person.h"
+@implementation Person
+- (void) observeValueForKeyPath:(NSString *) keyPath ofObject:(id) objectchange: (NSDictionary<NSString*, id) *)change context:(void*) context{
+    NSLog(@"%@", change);
+}
+@end
+```
+
+main.m
+
+```objective-c
+#import <Foundation/Foundation.h>
+#import "Person.h"
+int main(int argc, const char* argv[]){
+    Person * person = [[Person alloc] init];
+    person.name = @"ZhangSan";
+    person.age = 10;
+    [
+        person addObserver:person 
+        forKeyPath:@"name" 
+        options: NSKeyValueOBservingOptionNew|NSKeyValueObservingOptionOld
+        context:nil];
+    [
+        person addObserver: person
+        forKeyPath: @"age"
+        options: NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld
+        context: nil
+    ];
+    person.name = @"LiSi";
+    person.age = 20;
+    [person removeObserver: person forKeyPath:@"name", context:nil];
+    [person removeObserver: person forKeyPath:@"age", context: nil];
+    return 0;
+}
+```
+
+输出：
+
+```protobuf
+{
+	kind = 1;
+	new = LiSi;
+	old = ZhangSan;
+}
+{
+	kind = 1;
+	new = 20;
+	old = 10;
+}
+```
+
+
+
+看起来确实是Java中的值观察者模式，这么玩的啊
+
+# OC中的谓词
+
+就Kotlin的List啥里的filter呗
+
+不过这个是封装成了一个对象
+
+创建NSPredicate
+
+```objective-c
++(NSPredicate*) predicateWithFormat: (NSString*)predicateFormat, ...;
+```
+
+可以看到创建方法的参数是一个字符串， 这个往里面塞过滤条件
+
+跟写SQL那WHERE后面那一坨一样就完事了
+
+* SELE : 数据自身
+* =，== ： 等于
+* BETWEEN： 采用 BETWEEN {lowercase, highercase}格式
+* AND， &&， OR, NOT 逻辑操作符， 无需介绍
+* BEGINSWITH： 检查某个字符串是否以指定字符串开头， 如 BEGINSWITH'a'
+* CONTAINS ： 是否包含指定字符串
+* LIKE： SQL里学过，一样的东西
+
+然后就是调用这些方法
+
+```objective-c
+- (NSArray<ObjectType> *) filteredArrayUsingPredicate: (NSPredicate *) predicate; //过滤NSArray
+-(void) filterUsingPredicate: (NSPredicate* predicate); //过滤NSMutableArray
+
+-(NSSet<ObjectType>*) filteredSetUsingPredicate: (NSPredicate *) predicate;
+```
+
+例如
+
+person.h
+
+```objective-c
+#import <Foundation/Foundation.h>
+@interface Person: NSObject
+@property (nonatomic, copy) NSString * name;
+@property (nonatumic, assign) int age;
++ (instancetype) personWithName: (NSString *)name, age:(int) age;
+@end
+```
+
+person.m
+
+```objective-c
+#import "Person.h"
+@implementation Person
++ (instancetype) personWithName: (NSString *) name age: (int) age {
+    Person * person = [[Person alloc] init];
+    person.name = name;
+    person.age = age;
+    return person;
+}
+@end
+```
+
+main.m
+
+```objective-c
+#import <Foundation/Foundation.h>
+#import "Person.h"
+
+int main(int argc, const char * argv[]){
+    NSArray* array = [NSArray arrayWithObjects:
+                      [Person personWithName: @"ZhangSan" age: 10],
+                      [Person personWithName:@"LiSi" age: 15],
+                      [Person personWithName: @"WangWU" age: 20],
+                      [Person personWithName: @"WangLiu" age:25],
+                      [Person personWithName: @"LiWu", age: 30],
+                      [Person personWithName: @"ZhuangSi", age: 35],
+                      nil
+                     ];
+    NSPredicate * predicate = [NSPredicate predicateWithFormat:@"age > 20"];
+    NSArray * myArray = [array filteredArrayUsingPredicate: predicate];
+    for(Person* person in myArray){
+        NSLog(@"age > 20 : %@", person.name);
+    }
+    return 0;
+}
+```
+
+
+输出结果：
+
+age>20 :WangLiu
+
+age>20: LiWu
+
+age > 20: ZhangSi
+
+# Block 代码块
+
+代码块的调用和C的函数调用相同
+
+代码块对于全局变量在块内是可以操控的
+
+Java中的内部方法 or 内部类 & Kotlin中的lambda？
+
+```objective-c
+#import <Foundation/Foundation.h>
+
+int main(int argc, const char * argv[]){
+    void (^helloWorld) (void);
+    helloWorld = ^(void) {
+        NSLog(@"Hello, World!");
+        
+    };
+    helloWorld();
+    return 0;
+}
+```
+
+block的声明：
+
+```objective-c
+void (^helloWorld) (void);
+```
+
+第一个void是返回值类型, ^ 是block的标识， 方便编译器做识别， 毕竟C里可没有lambda， 第二个void是代码块参数
+
+同时block 配上 __block关键字可以实现修改块外的作用域内变量
+
+```objective-c
+#import <Foundation/Foundation.h>
+int number = 10;
+int main(int argc, char * argv[]){
+    __block int i = 10; //if you want change this variable, please add __block before variable declaration.
+    void(^block)() = ^ {
+        NSLog(@"The i is :%d", i);
+        NSLog(@"The number is :%d", number);
+        i++;
+        number++; 
+    };
+    block();
+    NSLog(@"The i is : %d", i);
+    NSLog(@"The number is :%d", number);
+    retunrn 0;
+}
+```
+
+实际开发环境里通常会使用block来进行排序
+
+Person.h
+
+```objective-c
+# import <Foundation/Foundation.h>
+typedef void (^myBlock)(NSString * name, int age);
+@interface Person: NSObject
+-(void) exercise: (myBlock) block;
+@end
+```
+
+person.m
+
+```objective-c
+#import "Person.h"
+@implementation Person
+-(void) exercise: (myBlock)block{
+    NSString* theName = @"ZhangSan";
+    int age = 10;
+    block(theName, age);
+}
+@end
+```
+
+main.m
+
+```objective-c
+#import <Foundation/Foundation.h>
+#import "Person.h"
+
+int main(int argc, const char* argv[]) {
+    Person * person = [[Person alloc] init];
+    [person exercise: ^(NSString* name, int age){
+        NSLog(@"%@, %d", name, age);
+    }];
+    return 0;
+}
+```
+
+
+
+# 数据存储
+
+## 存
+
+```objective-c
+#import <Foundation/Foundation.h>
+int main(int argc, const char * argv[]) {
+    NSString * path = @"/Users/yuki/Desktop/a.txt";
+    NSString * string = @"saigyoujinexas";
+    NSString * erorr = nil;
+    [string writeToFile:path atomically:YES 
+     encoding:NSUTF8StringEncoding error:&error];
+    return 0;
+}
+```
+
+## 取
+
+```objective-c
+#import <Foundation/Foundation.h>
+int main(int argc, const char * argv[]) {
+    NSString * path = @"/Users/yuki/Desktop/a.txt";
+    NSArray * array = [NSArray arrayWithCOntentsOfFile: path];
+    NSLong(@"%@", array);
+    return 0;
+}
+```
+
+输出
+
+(
+
+1,
+
+2,
+
+3,
+
+4
+
+)
+
+# 对象存储
+
+有这两个类
+
+**NSKeyedArchiver** & **NSKeyedUnarchiver** 
+
+即 **归档** & **解档**
+
+Person.h
+
+```objective-c
+#import <Foundation/Foundation.h>
+@interface Person : NSObject<NSCoding>
+@property (nonatomic, copy) NSString * name;
+@property (nonatomic, assign) int age;
+@property (nonatomic, assign) BOOL sex;
+@end
+```
+
+person.m
+
+```objective-c
+#import "Person.h"
+@implementation Person
+- (void) encodeWithCoder: (NSCoder *) aCoder{
+    [aCoder enCodeObject: self.name forKey:@"name"];
+    [aCoder enCodeBool: self.sex forKey:@"sex"];
+    [aCoder enCodeInt: self.age forKey: @"age"];
+}
+-(instancetype) initWithCoder: (NSCoder *) aDecoder {
+    self.name = [aDecoder decodeObjectForKey:@"name"];
+    self.sex = [aDecoder decodeBoolForKey:@"sex"];
+    self.age = [aDecoder decodeIntForKey: @"age"];
+    return self;
+}
+@end
+```
+
+main.m
+
+```objective-c
+#import <Foundation/Foundation.h>
+#import "Person.h"
+
+int main(int argc, const char * argv[]){
+	Person * person1 = [[Person alloc]init];
+    person1.name = @"ZhangSan";
+    person1.sex = 1;
+    person1.age = 10;
+    NSString * path = "/Users/yuki/Desktop/a.txt";
+    [NSKeyedArchiver archiveRootObject: person1 toFile:path];
+    
+    Person person = [NSKeyedUnarchiver unarchiveObjectWithFile:path];
+    return 0;
+}
+```
+
+## 归档多个对象
+
+```objective-c
+#import <Foundation/Foundation.h>
+#import "Person.h"
+
+int main(int argc, const char* argv[]){
+    Person * person1 = [[Person alloc] init];
+    person1.name = @"ZhangSan";
+    person1.sex = 1;
+    person1.age = 10;
+    
+    Person * person2 = [[Person alloc] init];
+    person2.name = @"LiSi";
+    person2.sex = 1;
+    person2.age = 20;
+    
+    NSString * path = @"/Users/yuki/Desktop/a.txt";
+    NSMUtableData * data = [NSMutableData data];
+    NSKeyedArchiver * archiver = [[NSKeyedArchiver alloc] initForWritingWithMutableData: data];
+    [archiver encodeObject: person1 forKey:@"person1"];
+    [archiver encodeObject: person2, forKey: @"person2"];
+    [archiver finishEncoding];
+    [data writeToFile: path atomically:YES];
+    
+    return 0;
+}
+```
+
+解档多个对象
+
+```objective-c
+#import <Foundation/Foundation.h>
+#import "Person.h"
+int main(int argc, const char * argv[]) {
+    NSString * path=@"/Users/xieyang/Desktop/a.txt";
+    NSData * theData=[NSData dataWithContentsOfFile:path];
+    NSKeyedUnarchiver * unarchiver=[[NSKeyedUnarchiver alloc]initForReadingWithData:theData];
+    
+    Person * thePerson1=[unarchiver decodeObjectForKey:@"person1"];
+    NSLog(@"the person1's name is :%@,sex is :%d,age is :%d",thePerson1.name,thePerson1.sex,thePerson1.age);
+    
+    Person * thePerson2=[unarchiver decodeObjectForKey:@"person2"];
+    NSLog(@"the person2's name is :%@,sex is :%d,age is :%d",thePerson2.name,thePerson2.sex,thePerson2.age);
+    return 0;
+}
+```
+
+# Plist
+
+plist 能存取小文件
+
+感觉像SharedPreferences
+
+但是该plist文件需要在XCode或自行先创建好
+
+main.m
+
+```objective-c
+#import <Foundation/Foundation.h>
+int main(int argc, const char * argv[]) {
+    NSArray * array=[NSArray arrayWithObjects:@"1",@"2",@"3",@"4",@"5", nil];
+    NSString * path=@"/Users/xieyang/Documents/Demo/Demo/test.plist";
+    [array writeToFile:path atomically:YES];
+return 0;
+}
+```
+
+自行创建plist的方式：
+
+```objective-c
+#import <Foundation/Foundation.h>
+int main(int argc, const char * argv[]) {
+    NSString * path=@"/Users/xieyang/Documents/Demo/Demo";
+    NSString * filePath=[path stringByAppendingPathComponent:@"data.plist"];
+    NSLog(@"%@",filePath);
+    NSArray * array=[NSArray arrayWithObjects:@"1",@"2",@"3",@"4", nil];
+    [array writeToFile:filePath atomically:YES];
+	return 0;
+}
+```
+
+# 用户默认设置
+
+```objective-c
+#import <Foundation/Foundation.h>
+int main(int argc, const char * argv[]){
+    if([[[NSUserDefaults standardUserDefaults] objectForKey: @"logined"]
+       isEqualToString:@"OK"]){
+        NSLog(@"您登陆过");
+    } else {
+        NSLog("you are not logined");
+        NSUserDefaults * userDefaults = [NSUserDefaults stardardUserDefaults];
+        [userDefaults setObject:@"OK" forKey:@"logined"];
+    }
+    return 0;
+}
+```
+
+诶呀，这下子真是SharedPreference了
+
+# 内存管理
+
+OC的内存管理有三种方式
+
+1. 手动引用计数(Managed Reference Counting)
+2. 自动引用计数(Automiatic Reference Counting)
+3. GC机制 （Mac OS X开发限定）
+
+6， 我可最喜欢这种无GC的玩意了
+
+## Managed Reference Counting
+
+在程序中 让引用+1的操作：
+
+```objective-c
+[object retain]
+```
+
+-1：
+
+```objective-c
+[object release]
+```
+
+当计数归零， 会自动发送dealloc消息(调用dealloc方法)
+
+```objective-c
+@autoreleasepool {
+
+}
+```
+
+这种结构会将所有需要发送release消息的对象都记录起来，给对象发送autorelease消息后，该对象会被释放池池记录起来，随后集中释放
+
+```objective-c
+#import <Foundation/Foundation.h>
+#import "Person.h"
+int main(int argc, const char * argv[]) {
+    Person * person;
+    @autoreleasepool {
+        person =[[[Person alloc] init ] autorelease]; //通过autorelease将person对象添加到自动释放池中
+        NSLog(@"%ld",[person retainCount]); //发送retainCount消息，获得当前对象的引用计数的值。
+        [person retain]; //发送retain消息，添加一个person对象的引用，
+        NSLog(@"%ld",[person retainCount]);
+    }
+    NSLog(@"%ld",[person retainCount]); //自动释放池中的代码运行完成后，自动释放池会被销毁，其中所包含对象的引用计数都会-1，对于引用计数为0的对象会被销毁
+    return 0;
+}
+```
+
+输出:
+
+1
+
+2
+
+1
+
+## ARC
+
+程序编译时会自动添加retain, relese, autorelease, retainCount这些方法
 
