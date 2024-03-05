@@ -71,6 +71,13 @@ int main(int argc, const char* argv[]){
 
 ## 类框架
 
+```objective-c
+@interface NewClassName: ParentClassName
+    propertyAndMethodDeclarations;
+@end
+
+```
+
 .h文件中的代码
 
 ```objective-c
@@ -84,7 +91,16 @@ int main(int argc, const char* argv[]){
 ```
 
 .m文件中的代码
+```objective-c
+@implementation NewClassName {
+    memberDeclarations;
+}
+    methodDefinitions;
 
+```
+
+
+例如
 ```objective-c
 @import "Person.h"
 // import other header file
