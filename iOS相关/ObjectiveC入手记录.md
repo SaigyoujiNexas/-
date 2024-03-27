@@ -1,3 +1,66 @@
+<!--toc:start-->
+- [OC - Hello World](#oc-hello-world)
+  - [为什么辣么多NS？](#为什么辣么多ns)
+- [OC - 面向对象](#oc-面向对象)
+  - [类框架](#类框架)
+  - [类方法与对象方法](#类方法与对象方法)
+    - [调用](#调用)
+  - [class extension](#class-extension)
+  - [@property 的几种常用修饰词](#property-的几种常用修饰词)
+    - [nonatomic & atomic](#nonatomic-atomic)
+    - [copy, strong & weak](#copy-strong-weak)
+    - [assign, readonly & readwrite](#assign-readonly-readwrite)
+    - [setter & getter](#setter-getter)
+    - [使用方法](#使用方法)
+- [命名规则](#命名规则)
+- [消息机制](#消息机制)
+  - [背后的原因 -- 动态特性](#背后的原因-动态特性)
+    - [动态类型](#动态类型)
+    - [动态绑定](#动态绑定)
+- [OC中的类别](#oc中的类别)
+- [协议](#协议)
+  - [创建](#创建)
+  - [实际应用](#实际应用)
+- [单例](#单例)
+- [NSString](#nsstring)
+  - [创建](#创建)
+  - [获取长度](#获取长度)
+  - [判断字符串相等](#判断字符串相等)
+  - [字符串比较](#字符串比较)
+  - [判断子串](#判断子串)
+  - [NSMutableString](#nsmutablestring)
+- [NSArray](#nsarray)
+  - [创建](#创建)
+  - [长度](#长度)
+  - [索引](#索引)
+  - [判断包含](#判断包含)
+  - [NSMutableArray](#nsmutablearray)
+- [NSDictionary](#nsdictionary)
+  - [判断两个字典是否相等](#判断两个字典是否相等)
+  - [根据键找到对应的值](#根据键找到对应的值)
+  - [键集合 & 值集合](#键集合-值集合)
+  - [NSMutableDictionary](#nsmutabledictionary)
+- [NSDate](#nsdate)
+- [NSData](#nsdata)
+- [OC中的包裹类](#oc中的包裹类)
+- [OC中的通知](#oc中的通知)
+- [KVC & KVO](#kvc-kvo)
+  - [KVC](#kvc)
+  - [KVO](#kvo)
+- [OC中的谓词](#oc中的谓词)
+- [Block 代码块](#block-代码块)
+- [数据存储](#数据存储)
+  - [存](#存)
+  - [取](#取)
+- [对象存储](#对象存储)
+  - [归档多个对象](#归档多个对象)
+- [Plist](#plist)
+- [用户默认设置](#用户默认设置)
+- [内存管理](#内存管理)
+  - [Managed Reference Counting](#managed-reference-counting)
+  - [ARC](#arc)
+<!--toc:end-->
+
 # OC - Hello World
 
 ```objective-c
@@ -166,7 +229,7 @@ atomic: 原子性 (默认)
 
 ### copy, strong & weak
 
-copy： 一般用于字符串， 将内容拷贝一份， 保存在一个单独的存储空间中。
+copy： 一般用于字符串， 将内容拷贝一份， 保存在一个单独的存储空间中(类似于Java的clone)。
 
 strong： 强引用， 不受gc影响， 引用计数
 
@@ -418,8 +481,12 @@ Car.m
 static Car* car = nil;
 @implementation Car
 +(instancetype)car{
-    if(car == nil) {
-        car = [[Car alloc] init];
+    if(car == nil){
+        @sychronized{
+            if(car == nil) {
+                car = [[Car alloc] init];
+            }
+        }
     }
     return car;
 }
@@ -489,8 +556,6 @@ int main(int argc, char* argv[]){
 - (instancetype)initWithString: (NSString*)aString;
 ```
 
-
-
 instancetype和id的意义一样， 但是instancetype返回值强制为本类的对象
 
 当运用这两种方式， XCode提示直接使用
@@ -500,10 +565,6 @@ NSString * str = @"";
 ```
 
 这种形式
-
-
-
-
 
 ```objective-c
 + (instancetype)stringWithFormat:(NSString*)format;
