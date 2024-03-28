@@ -128,3 +128,317 @@ EOCConnectionStateConnected:
 ```
 
 ### 尽量直接访问变量，通过setter设置变量(内部相互调用下)
+
+### Object 的Equality
+
+以下两个方法是相等检查的核心
+
+```objective-c
+-(BOOL) isEqual: (id)object;
+-(NSUInteger)hash;
+```
+
+跟Java一样, 重写这两个方法可以定义自己的相等判断
+hash方法中不宜定义过长的处理逻辑
+同时不应该让hash值依赖于可变部分
+
+```objective-c
+NSMutableSet *set = [NSMutableSet new];
+
+NSMUtableArray *arrayA = [@[@1, @2] mutableCopy];
+[set addObject: arrayA];
+//Ouput: set = {((1, 2))}
+
+NSMutableArray *arrayB = [@[@1, @2] mutableCopy];
+[set addObject: arrayB];
+//Output: set = {((1, 2))}
+
+MSMutableArray *arrayC = [@[@1] mutableCopy];
+[set addObject: arrayC];
+//Output: set = {((1), (1, 2))}
+
+[arrayC addObject:@2];
+//Output: set = {((1, 2), (1, 2))}
+
+NSSet *setB = [set copy];
+//Output: setB = {((1, 2))}
+```
+
+### 使用类簇(Class Cluster)隐藏实现细节
+
+类簇模式看下面代码就懂了
+
+```objective-c
+typedef NS_ENUM(NSUInteger, EOCEmployeeType){
+    EOCEmployeeTypeDeveloper,
+    EOCEmployeeTypeDesigner,
+    EOCEmployeeTypeFinance,
+};
+
+@interface EOCEmployee: NSObject
+@property (copy) NSString *name;
+@property NSUInteger salary;
+
+//Helper for creating Employee objects
++(EOCEmployee*)employeeWithType:(EOCEmployeeType)type;
+
+// Make Employees do their respective day's work
+-(void) doADaysWork;
+@end
+
+@implementation EOCEmployee
++ (EOCEmployee *)employeeWithType:(EOCEmployeeType)type{
+    switch(type){
+        case EOCEmployeeTypeDeveloper:
+            return [EOCEmployeeDeveloper new];
+            break;
+        case EOCEmployeeTypeDesigner:
+            return [EOCEmployeeDisigner new];
+            break;
+        case EOCEmployeeTypeFinance:
+            return [EOCEmployeeFinance new];
+            break;
+    }
+}
+
+- (void) doADaysWork{
+    //Subclasses implement this.
+}
+@end
+
+//sub class implementation
+@interface EOCEmployeeDeveloper: EOCEmployee
+@end
+
+@implementation EOCEmployeeDeveloper
+- (void) doADaysWork{
+    [self writeCode];
+}
+@end
+```
+
+### 使用关联对象将自定义数据关联到class上
+
+第一种是用delegate
+
+```objective-c
+-(void)askUserAQuestion{
+    UIAlertView *alert = [[UIAlertView alloc]
+        initWithTitle: @"Question"
+        message: @"What do you want to do?"
+        delegate: self
+        cancelButtonTitle:@"Cancel"
+        otherButtonTitles:@"Continue", nil
+    ];
+    [alert show];
+}
+
+-(void) alertView:(UIAlertView *)alertView
+        clickedButtonAtIndex:(NSInteger)buttonIndex{
+    if(buttonIndex == 0){
+        [self doCancel];
+    } else {
+        [self doContinue];
+    }
+}
+```
+
+第二种是用以下两个方法
+
+```objective-c
+void objc_setAssociatedObject(id object, void *key, id value,
+    objc_AssociationPolicy policy)
+
+id objc_getAssociatedObject(id object, void *key)
+```
+
+```objective-c
+#import <objc/runtime.h>
+
+static void *EOCMyAlertViewKey = "EOCMyAlertViewKey";
+
+-(void) askUserAQuestion {
+    UIAlertView *alert = [[UIAlertView alloc]
+        initWithTitle:@"Question"
+        message:@"What do you want to do?"
+        delegate: self
+        cancelButtonTitle:@"Cancel",
+        otherButtonTitles:@"Continue", nil];
+    void (^block)(NSInteger) = ^(NSInteger buttonIndex){'
+        if(buttonIndex == 0){
+            [self doCancel];
+        } else {
+            [self doContinue];
+        }
+    };
+    objc_setAssociatedObject(alert, EOCMyAlertViewKey, block, OBJC_ASSOCIATION_COPY);
+    [alert show];
+}
+
+-(void) alertView:(UIAlertView *) alertView
+        clickedButtonAtIndex:(NSInteger)buttonIndex{
+    void (^block)(NSInteger) = objc_getAssociatedObject(alertView, EOCMyAlertViewKey);
+    block(buttonIndex);
+}
+```
+
+通过这种方法,可以将alertView的代码聚焦在一起,但要小心捕获变量问题
+
+### 了解objc_msgSend
+
+OC函数调用都是走的消息, 即
+
+```objective-c
+void objc_msgSend(id self, SEL cmd, ...)
+
+id returnValue = objc_msgSend(someObject, @selector(massageName:), parameter);
+```
+
+对于一些边缘情况, OC有以下方法:
+
+```objective-c
+objc_msgSend_stret
+//返回一个结构体
+
+objc_msgSend_fpret
+//返回一个浮点值
+
+objc_msgSendSuper
+//发送消息给父类
+```
+
+### 了解消息转发
+
+消息转发分为两部分
+
+1. 提供给receiver所在的类一个动态添加方法的机会, 即dynamic method resolution
+2. 全转发机制, 询问receiver是否有替代的类响应selector, 如果有, 则转移消息,正常进行.
+   否则将会唤起完整转发机制, 使用NSInvocation对象容纳message的全部信息,并给receiver最后一次机会
+
+第一种方法通过一些方法实现
+
+```objective-c
++(BOOL)resolveInstanceMethod:(SEL)selector
++(BOOL)resulveClassMethod:(SEL)selector
+//and more
+```
+
+询问receiver释放有替代的响应selector通过该方法实现
+
+```objective-c
+- (id)forwardingTargetForSelector:(SEL)selector
+```
+
+完整转发机制通过这个方法
+
+```objective-c
+-(void)forwardInvocation:(NSInvocation *)invocation
+```
+
+可以使用该方法修改目的地,消息的参数, 修改selector等
+该方法会不停沿父类传播直到NSObject, 抛出doesNotReconizeSelector:
+整体机制如下:
+
+```mermaid
+---
+title: Message forwarding
+---
+flowchart TB
+    resolveInstance["resolveInstanceMethod"]
+    forwardTarget["forwardingTargetForSelector"]
+    fi["forwardInvocation"]
+    mnh["Message not handled"]
+    mh["Messag handled"]
+    resolveInstance --->|Return NO| forwardTarget
+    resolveInstance --->|Return YES| mh
+    forwardTarget --->|Return replacement receiver|mh
+    forwardTarget--->|Return Nil|fi
+    fi ---> mh
+    fi --->mnh
+```
+
+示例代码:
+
+```objective-c
+//EOCAutoDictionary.h
+#import <Foundation/Foundation.h>
+
+@interface EOCAutoDictionary : NSObject
+@property(nonatomic, strong) NSString *string;
+@property(nonatomic, strong) NSNumber *number;
+@property(nonatomic, strong) NSDate *date;
+@property(nonatomic, strong) id opaqueObject;
+@end
+
+
+//EOCAutoDictionary.m
+#import "EOCAutoDictionary.h"
+#include <Foundation/Foundation.h>
+#import <objc/runtime.h>
+
+@interface EOCAutoDictionary ()
+@property(nonatomic, strong) NSMutableDictionary *backingStore;
+@end
+
+id autoDictionaryGetter(id self, SEL _cmd) {
+  EOCAutoDictionary *typedSelf = (EOCAutoDictionary *)self;
+  NSMutableDictionary *backingStore = typedSelf.backingStore;
+
+  NSString *key = NSStringFromSelector(_cmd);
+  return [backingStore objectForKey:key];
+}
+
+void autoDictionarySetter(id self, SEL _cmd, id value) {
+  EOCAutoDictionary *typedSelf = (EOCAutoDictionary *)self;
+  NSMutableDictionary *backingStore = typedSelf.backingStore;
+  NSString *selectorString = NSStringFromSelector(_cmd);
+  NSMutableString *key = [selectorString mutableCopy];
+
+  [key deleteCharactersInRange:NSMakeRange(key.length - 1, 1)];
+  [key deleteCharactersInRange:NSMakeRange(0, 3)];
+  NSString *lowercaseFirstChar = [[key substringToIndex:1] lowercaseString];
+  [key replaceCharactersInRange:NSMakeRange(0, 1)
+                     withString:(lowercaseFirstChar)];
+
+  if (value) {
+    [backingStore setObject:value forKey:key];
+  } else {
+    [backingStore removeObjectForKey:key];
+  }
+}
+@implementation EOCAutoDictionary
+@dynamic string, number, date, opaqueObject;
+
+- (id)init {
+  if ((self = [super init])) {
+    _backingStore = [NSMutableDictionary new];
+  }
+  return self;
+}
+
++(BOOL) resolveInstanceMethod:(SEL)selector {
+  NSString *selectorString = NSStringFromSelector(selector);
+  if ([selectorString hasPrefix:@"set"]) {
+    class_addMethod(self, selector, (IMP)autoDictionarySetter, "v@:@");
+  } else {
+    class_addMethod(self, selector, (IMP)autoDictionaryGetter, "@@:");
+  }
+  return YES;
+}
+@end
+
+//main.m
+
+#import "EOCAutoDictionary.h"
+#import <Foundation/Foundation.h>
+int main(int argc, const char *argv[]) {
+  @autoreleasepool {
+    // insert code here...
+    NSLog(@"Hello, World!");
+    EOCAutoDictionary *dict = [EOCAutoDictionary new];
+    dict.date = [NSDate dateWithTimeIntervalSince1970:475372800];
+    NSLog(@"dict.date = %@", dict.date);
+  }
+  return 0;
+}
+```
