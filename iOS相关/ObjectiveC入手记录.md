@@ -1,4 +1,5 @@
 <!--toc:start-->
+
 - [OC - Hello World](#oc-hello-world)
   - [为什么辣么多NS？](#为什么辣么多ns)
 - [OC - 面向对象](#oc-面向对象)
@@ -59,7 +60,7 @@
 - [内存管理](#内存管理)
   - [Managed Reference Counting](#managed-reference-counting)
   - [ARC](#arc)
-<!--toc:end-->
+  <!--toc:end-->
 
 # OC - Hello World
 
@@ -108,17 +109,17 @@ NSString的format转义字符是%@
 
 @interface Student: NSObject
     @property NSString* name;
-	@property int age;
-	@property float score;
-	-(void) display;   //类所包含的函数
+    @property int age;
+    @property float score;
+    -(void) display;   //类所包含的函数
 @end //类声明结束
 
 @implementation Student
     -(void) display {
-    	NSLog(@"%@的年龄是 %d, 成绩是 %f", self.name, self.age, self.score);
-	}
+        NSLog(@"%@的年龄是 %d, 成绩是 %f", self.name, self.age, self.score);
+    }
 @end
-    
+
 int main(int argc, const char* argv[]){
     Student * stu1 = [[Student alloc] init];
     stu1.name = @"小明";
@@ -154,6 +155,7 @@ int main(int argc, const char* argv[]){
 ```
 
 .m文件中的代码
+
 ```objective-c
 @implementation NewClassName {
     memberDeclarations;
@@ -162,14 +164,14 @@ int main(int argc, const char* argv[]){
 
 ```
 
-
 例如
+
 ```objective-c
 @import "Person.h"
 // import other header file
 
 // add class extension
-@implementation Person 
+@implementation Person
     //implement the method declared.
 @end
 ```
@@ -332,16 +334,14 @@ int main(int argc, const char* argv[]){
 
 tips: 6完了，有点太信任程序员了
 
-
-
 # OC中的类别
 
 在现有类的基础上为该类增加一些新的方法即为类别(别名：扩展类， 类目)
 
 类别与类扩展的区别：
 
-* 同： 类扩展和类别都可以为原有类增加新的方法
-* 异： 类扩展添加的方法外界无法调用，而类别可以， 类扩展可以添加属性，而类别只能添加方法
+- 同： 类扩展和类别都可以为原有类增加新的方法
+- 异： 类扩展添加的方法外界无法调用，而类别可以， 类扩展可以添加属性，而类别只能添加方法
 
 ps： 类别有点像扩展函数
 
@@ -360,7 +360,7 @@ Person.m
 
 ```objective-c
 #import "Person.h"
-@implementation Person 
+@implementation Person
     -(void) run {
     NSLog(@"the person is running!");
 }
@@ -396,6 +396,7 @@ OC为单继承多协议语言(java 的 implementation?)
 2. 协议中不能定义变量与属性， 只能定义方法
 
 ps： 这不就是接口？？？？
+
 ## 创建
 
 Children.h
@@ -412,8 +413,8 @@ Children.h
 
 协议中有以下几个修饰词：
 
-* @required(默认， 表示以下方法必须被实现)
-* @optional(以下方法可以不实现)
+- @required(默认， 表示以下方法必须被实现)
+- @optional(以下方法可以不实现)
 
 \<ChildrenDelegate\> 表明这个属性方法和这个协议相关联
 
@@ -533,11 +534,11 @@ main.m
 
 int main(int argc, char* argv[]){
     Person * ZhangSan = [[Person alloc] init];
-    
+
     Person* LiSi = [[Person alloc] init];
     [LiSi displayWithDriveHours:5];
     [ZhangSan displayWithDriveHours: 10];
-    
+
     [LiSi displayWithDriveHours: 3];
     Car * car = [Car car];
     NSLog(@"The allHours are %d", car.driveHours);
@@ -743,18 +744,18 @@ int main() {
     NSDictionary * dic1=[NSDictionary dictionaryWithObject:@"object1" forKey:@"key1"];
     NSLog(@"dic1 has :%@",dic1);
 
-    NSDictionary * dic2=[NSDictionary 
+    NSDictionary * dic2=[NSDictionary
                          dictionaryWithObjects:
-                         [NSArray arrayWithObjects:@"object1",@"object2",@"object3", nil] 
+                         [NSArray arrayWithObjects:@"object1",@"object2",@"object3", nil]
                          forKeys:
                          [NSArray arrayWithObjects:@"key1",@"key2",@"key3", nil]];
     NSLog(@"dic2 has :%@",dic2);
-    
+
     NSDictionary * dic3=[
         NSDictionary dictionaryWithObjectsAndKeys:
         @"object1",@"key1",@"object2",@"key2",@"object3",@"key3", nil];
     NSLog(@"dic3 has :%@",dic3);
-    
+
     NSDictionary * dic4=
         [[NSDictionary alloc] initWithObjectsAndKeys:
          @"object1",@"key1",@"object2",@"key2",@"object3",@"key3", nil];
@@ -774,10 +775,10 @@ count属性与方法返回键值对数量
 ```objective-c
 #import <Foundation/Foundation.h>
 int main(){
-    NSDictionary * dic2 = 
+    NSDictionary * dic2 =
         [NSDictionary
          dictionaryWithObjects: [
-             NSArray arrayWithObjects:@"object1",@"object2",@"object3", nil] 
+             NSArray arrayWithObjects:@"object1",@"object2",@"object3", nil]
          forKeys:[
              NSArray arrayWithObjects:@"key1",@"key2",@"key3", nil]
         ]
@@ -799,7 +800,7 @@ int main(){
 int main(){
     NSDictionary * dic2 = [
         NSDictionary dictionaryWithObjects:[
-            NSArray arrayWithObjects:@"object1",@"object2",@"object3", nil] 
+            NSArray arrayWithObjects:@"object1",@"object2",@"object3", nil]
         forKeys:[NSArray arrayWithObjects:@"key1",@"key2",@"key3", nil]
     ];
     NSString * str = [dic2 objectForKey:@"key1"];
@@ -816,12 +817,12 @@ int main(){
 int main(){
     NSDictionary * dic2 = [
         NSDictionary dictionaryWithObjects:[
-            NSArray arrayWithObjects:@"object1",@"object2",@"object3", nil] 
+            NSArray arrayWithObjects:@"object1",@"object2",@"object3", nil]
         forKeys:[NSArray arrayWithObjects:@"key1",@"key2",@"key3", nil]
     ];
     NSArray * keys = dic2.allKeys;
     NSArray * objects = dic2.allValues;
-    
+
     NSLog(@"all keys are: %@", keys);
     NSLog(@"all values are : %@", objects);
     return 0;
@@ -914,7 +915,7 @@ NSValue则是装箱结构体， 转换为OC对象
 #import <Foundation/Foundation.h>
 int main(){
     int number = 5;
-    
+
     NSNumber * intNum = [[NSNumber alloc] initWithInt: number];
     NSArray * array = [NSArray arrayWithObjects: intNum, nil];
     NSLog(@"the array is :%@", array);
@@ -932,7 +933,7 @@ int main(){
     NSRange range;
     range.length = 2;
     range.location = 1;
-    
+
     NSValue * value = [NSValue valueWithRange: range];
     NSRange theRange = [value rangeValue];
     NSLog(@"%lu, %lu", (unsigned long)theRange.length, (unsigned long)theRange.location);
@@ -952,7 +953,7 @@ wocker.m
 -(instancetype) init {
     if(self = [super init]) {
         [[NSNotificationCenter defaultCenter]
-         addObserver:self 
+         addObserver:self
          selector:@selector(makeCar) name:@"canMake" object:nil
         ];
 }
@@ -1015,8 +1016,6 @@ int main(int argc, const char* argv[]) {
 输出: The person's name is :ZhangSan, and age is :10, sex is :1
 
 说白了，先开空间，然后在分配值， 空构造器呗
-
-
 
 *setValue:forKey*方法属于NSKeyValueCoding.h接口中的方法
 
@@ -1088,8 +1087,8 @@ int main(int argc, const char* argv[]){
     person.name = @"ZhangSan";
     person.age = 10;
     [
-        person addObserver:person 
-        forKeyPath:@"name" 
+        person addObserver:person
+        forKeyPath:@"name"
         options: NSKeyValueOBservingOptionNew|NSKeyValueObservingOptionOld
         context:nil];
     [
@@ -1121,8 +1120,6 @@ int main(int argc, const char* argv[]){
 }
 ```
 
-
-
 看起来确实是Java中的值观察者模式，这么玩的啊
 
 # OC中的谓词
@@ -1141,13 +1138,13 @@ int main(int argc, const char* argv[]){
 
 跟写SQL那WHERE后面那一坨一样就完事了
 
-* SELE : 数据自身
-* =，== ： 等于
-* BETWEEN： 采用 BETWEEN {lowercase, highercase}格式
-* AND， &&， OR, NOT 逻辑操作符， 无需介绍
-* BEGINSWITH： 检查某个字符串是否以指定字符串开头， 如 BEGINSWITH'a'
-* CONTAINS ： 是否包含指定字符串
-* LIKE： SQL里学过，一样的东西
+- SELE : 数据自身
+- =，== ： 等于
+- BETWEEN： 采用 BETWEEN {lowercase, highercase}格式
+- AND， &&， OR, NOT 逻辑操作符， 无需介绍
+- BEGINSWITH： 检查某个字符串是否以指定字符串开头， 如 BEGINSWITH'a'
+- CONTAINS ： 是否包含指定字符串
+- LIKE： SQL里学过，一样的东西
 
 然后就是调用这些方法
 
@@ -1210,7 +1207,6 @@ int main(int argc, const char * argv[]){
 }
 ```
 
-
 输出结果：
 
 age>20 :WangLiu
@@ -1234,7 +1230,7 @@ int main(int argc, const char * argv[]){
     void (^helloWorld) (void);
     helloWorld = ^(void) {
         NSLog(@"Hello, World!");
-        
+
     };
     helloWorld();
     return 0;
@@ -1249,7 +1245,7 @@ void (^helloWorld) (void);
 
 第一个void是返回值类型, ^ 是block的标识， 方便编译器做识别， 毕竟C里可没有lambda， 第二个void是代码块参数
 
-同时block 配上 __block关键字可以实现修改块外的作用域内变量
+同时block 配上 \_\_block关键字可以实现修改块外的作用域内变量
 
 ```objective-c
 #import <Foundation/Foundation.h>
@@ -1260,7 +1256,7 @@ int main(int argc, char * argv[]){
         NSLog(@"The i is :%d", i);
         NSLog(@"The number is :%d", number);
         i++;
-        number++; 
+        number++;
     };
     block();
     NSLog(@"The i is : %d", i);
@@ -1309,8 +1305,6 @@ int main(int argc, const char* argv[]) {
 }
 ```
 
-
-
 # 数据存储
 
 ## 存
@@ -1321,7 +1315,7 @@ int main(int argc, const char * argv[]) {
     NSString * path = @"/Users/yuki/Desktop/a.txt";
     NSString * string = @"saigyoujinexas";
     NSString * erorr = nil;
-    [string writeToFile:path atomically:YES 
+    [string writeToFile:path atomically:YES
      encoding:NSUTF8StringEncoding error:&error];
     return 0;
 }
@@ -1357,7 +1351,7 @@ int main(int argc, const char * argv[]) {
 
 有这两个类
 
-**NSKeyedArchiver** & **NSKeyedUnarchiver** 
+**NSKeyedArchiver** & **NSKeyedUnarchiver**
 
 即 **归档** & **解档**
 
@@ -1404,7 +1398,7 @@ int main(int argc, const char * argv[]){
     person1.age = 10;
     NSString * path = "/Users/yuki/Desktop/a.txt";
     [NSKeyedArchiver archiveRootObject: person1 toFile:path];
-    
+
     Person person = [NSKeyedUnarchiver unarchiveObjectWithFile:path];
     return 0;
 }
@@ -1421,12 +1415,12 @@ int main(int argc, const char* argv[]){
     person1.name = @"ZhangSan";
     person1.sex = 1;
     person1.age = 10;
-    
+
     Person * person2 = [[Person alloc] init];
     person2.name = @"LiSi";
     person2.sex = 1;
     person2.age = 20;
-    
+
     NSString * path = @"/Users/yuki/Desktop/a.txt";
     NSMUtableData * data = [NSMutableData data];
     NSKeyedArchiver * archiver = [[NSKeyedArchiver alloc] initForWritingWithMutableData: data];
@@ -1434,7 +1428,7 @@ int main(int argc, const char* argv[]){
     [archiver encodeObject: person2, forKey: @"person2"];
     [archiver finishEncoding];
     [data writeToFile: path atomically:YES];
-    
+
     return 0;
 }
 ```
@@ -1448,10 +1442,10 @@ int main(int argc, const char * argv[]) {
     NSString * path=@"/Users/xieyang/Desktop/a.txt";
     NSData * theData=[NSData dataWithContentsOfFile:path];
     NSKeyedUnarchiver * unarchiver=[[NSKeyedUnarchiver alloc]initForReadingWithData:theData];
-    
+
     Person * thePerson1=[unarchiver decodeObjectForKey:@"person1"];
     NSLog(@"the person1's name is :%@,sex is :%d,age is :%d",thePerson1.name,thePerson1.sex,thePerson1.age);
-    
+
     Person * thePerson2=[unarchiver decodeObjectForKey:@"person2"];
     NSLog(@"the person2's name is :%@,sex is :%d,age is :%d",thePerson2.name,thePerson2.sex,thePerson2.age);
     return 0;
@@ -1572,4 +1566,3 @@ int main(int argc, const char * argv[]) {
 ## ARC
 
 程序编译时会自动添加retain, relese, autorelease, retainCount这些方法
-
