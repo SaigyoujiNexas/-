@@ -135,3 +135,119 @@ Can physically denormalize(e.g., "prejoin") related tuples and store them togeth
 ### Denormalized tuple data:
 
 ![image-20220424220605297](https://s2.loli.net/2022/04/24/CtQ9z12Y8JawxyK.png)
+
+## Log-Structured file organization
+
+一种替换在pages中保存tuples的方式为DBMS只保存日志记录(log record)
+
+![image-20240415001740919](https://s2.loli.net/2024/04/15/R8Qr47YmbsTc9h6.png)
+
+## Tuple Storage
+
+* INTEGER/BIGINT/SMALLINT/TINYINT 为C/C++数据大小即可
+* FLOAT/REAL ---IEEE-754 标准 NUMERIC/DECIMAL 定点浮点数
+* VARCHAR/VARBINARY/TEXT/BLOB header保存长度， 后面存内容
+* TIME/DATE/TIMESTAMP 64位整数
+
+### Large Value
+
+大多数DBMS不允许tuple超过1page
+
+为保存超过1page的数据， DBMS使用overflow storage pages
+
+* Postgres： TOAST (>2KB)
+* MySQL: Overflow( > 1/2 size of page)
+* SQL Server: Overflow( > size of page)
+
+![image-20240415002840571](https://s2.loli.net/2024/04/15/pmhaAoB8lTWeVjN.png)
+
+External Value Storage
+
+一些系统使用BLOB类型在外部文件中保存大型数据
+
+* Oracle： BFILE 
+* Microsoft： FILESTREAM
+
+DBMS无法直接管理这些内容
+
+![image-20240415003133669](https://s2.loli.net/2024/04/15/qszyEprP9kIRGHf.png)
+
+## 系统目录
+
+* 将元组信息抽象
+* 在引导列表使用特定编码（INFORMATION_SCHEMA）
+
+
+
+**关系模型由于没有将全部的tuple表存在一个page中，在某些情况下工作性能不是很好 **
+
+## OLTP
+
+即On-line Transaction Processing:
+
+通常是简单的读取/添加/更新值
+
+![image-20240415004206893](https://s2.loli.net/2024/04/15/iacoezjPZI2CFTf.png)
+
+## OLAP
+
+On-line Analytical Processing:
+
+复杂的查询， 读入大量数据
+
+![image-20240415004341620](https://s2.loli.net/2024/04/15/lI2oiTLFwD6O8Wn.png)
+
+![image-20240415004408326](https://s2.loli.net/2024/04/15/Rhct2sj1paSGJNP.png)
+
+对于OLTP， NOSQL比较好用， 例如Mongo， Redis
+
+对于OLAP， NewSQL比较好用， 不过现在比较初始
+
+## 存储模型
+
+### 行存储
+
+也称为NSM(N-ARY STORAGE MODEL)
+
+![image-20240415004639542](https://s2.loli.net/2024/04/15/MSLFDqeC3rsa1mT.png)
+
+优点： 
+
+* 增删查快
+* 对于需要一整个tuple的场景性能非常好
+
+缺点： 查找一次会读取一整行， 但是有时只需要一辆列上的数据
+
+### 列存储
+
+一个page只存储一列的数据
+
+![image-20240415004952306](https://s2.loli.net/2024/04/15/Y6g4E7FRzIJAXZd.png)
+
+对于tuple中值的定位
+
+* 固定column的长度
+
+* 保存在tuple上的id
+
+大多是都用第一种
+
+![image-20240415005203005](https://s2.loli.net/2024/04/15/MqP3E86Cyxu5He1.png)
+
+优点：
+
+* 避免IO浪费
+
+* 更好的查询处理和数据压缩
+
+缺点：
+
+由于一个tuple的column在不同page上，查询，插入，更新， 删除的速度降低
+
+现在主流数据库都用的列存储
+
+对于特殊场景
+
+* OLTP -> 行存储
+* OLAP -> 列存储
+
