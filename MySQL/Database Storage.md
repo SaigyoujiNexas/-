@@ -22,52 +22,52 @@ This works good enough for read-only access. It is complicated when there are mu
 
 There are some solution to this problem:
 
-* madvise: Tell the OS how you expect to read certain pages.
-* mlock: Tell the OS that memory ranges cannot be paged out.
-* msync: Tell the OS to flush memory rages out to disk.
+- madvise: Tell the OS how you expect to read certain pages.
+- mlock: Tell the OS that memory ranges cannot be paged out.
+- msync: Tell the OS to flush memory rages out to disk.
 
 ![image-20220424200702334](https://s2.loli.net/2022/04/24/SPHQIcUrokmAx1C.png)
 
 # Problem 1: How the DBMS represents the database in files on disk.
 
- the DBMS stores a database as one or more files on disk.**The OS doesn't know anything about the contents of these files**
+the DBMS stores a database as one or more files on disk.**The OS doesn't know anything about the contents of these files**
 
-the **storage manager**  is responsible for maintaining a database's files.(Some do their own scheduling for reads and writes to improve spatial and temporal locality of pages.)
+the **storage manager** is responsible for maintaining a database's files.(Some do their own scheduling for reads and writes to improve spatial and temporal locality of pages.)
 
 It organizes the files as a collection of pages.
 
-* Tracks data read/written to pages.
-* Tracks the available space.
+- Tracks data read/written to pages.
+- Tracks the available space.
 
- A **page** is a fixed-size block of data.
+A **page** is a fixed-size block of data.
 
-* It can contain tuples, meta-data, indexes, log records...
-* Most systems do not mix page types.
-* Some systems require a page to be self-contained.
+- It can contain tuples, meta-data, indexes, log records...
+- Most systems do not mix page types.
+- Some systems require a page to be self-contained.
 
 Each page is given a unique identifier
 
-* The DBMS uses an indirection layer to map page ids to physical locations.
+- The DBMS uses an indirection layer to map page ids to physical locations.
 
 There are three different notions of "pages" in a DBMS:
 
-* Hardware Page(usually 4KB)
-* OS Page(usually 4KB)
-* Database Page(512B-16KB)
+- Hardware Page(usually 4KB)
+- OS Page(usually 4KB)
+- Database Page(512B-16KB)
 
 by hardware page, we mean at what level the device can guarantee a "failsafe write"
 
 A **heap file** is am unordered collection of pages where tuples that are stored in random order.
 
-* Create/Get/Write/Delete Page
-* Must also support iterating over all pages.
+- Create/Get/Write/Delete Page
+- Must also support iterating over all pages.
 
 Need meta-data to keep track of what pages exist and which ones have free space.
 
 Two ways to represent a heap file:
 
-* Linked List
-* Page Directory
+- Linked List
+- Page Directory
 
 Second is a best solution project.
 
@@ -75,8 +75,8 @@ Second is a best solution project.
 
 Maintain a **header page** at the beginning of the file that stores two pointers:
 
-* HEAD of the **free page list**
-* HEAD of the **data page list**
+- HEAD of the **free page list**
+- HEAD of the **data page list**
 
 Each page keeps track of the number of free slots in itself.
 
@@ -86,11 +86,11 @@ Each page keeps track of the number of free slots in itself.
 
 Every page contains a **header** of meta-data about the page's contents.
 
-* Page size
-* Check sum
-* DBMS Version
-* Transaction Visibility
-* Compression Information
+- Page size
+- Check sum
+- DBMS Version
+- Transaction Visibility
+- Compression Information
 
 Some systems require pages to be **self-contained(e.g. Oracle)**
 
@@ -100,7 +100,7 @@ Some systems require pages to be **self-contained(e.g. Oracle)**
 
 But this design is really suck.
 
-if i delete the tuple2, and insert the tuple 4, then, what position is tuple 4 to  save in?
+if i delete the tuple2, and insert the tuple 4, then, what position is tuple 4 to save in?
 
 to tranverse the page?
 
@@ -112,8 +112,8 @@ The DBMS needs a way to keep track of individual tuples.
 
 Each tuple is assigned a unique **record identifier**
 
-* Most common: page_id + offset/slot
-* Can also contain file location info
+- Most common: page_id + offset/slot
+- Can also contain file location info
 
 An application **cannot** rely on these ids to mean anything.
 
@@ -125,8 +125,8 @@ An application **cannot** rely on these ids to mean anything.
 
 Can physically denormalize(e.g., "prejoin") related tuples and store them together in the same page.
 
-* Potentially reduces the amount of I/O for common workload patterns.
-* Can make updates more expensive.
+- Potentially reduces the amount of I/O for common workload patterns.
+- Can make updates more expensive.
 
 ### Normally:
 
@@ -144,10 +144,10 @@ Can physically denormalize(e.g., "prejoin") related tuples and store them togeth
 
 ## Tuple Storage
 
-* INTEGER/BIGINT/SMALLINT/TINYINT 为C/C++数据大小即可
-* FLOAT/REAL ---IEEE-754 标准 NUMERIC/DECIMAL 定点浮点数
-* VARCHAR/VARBINARY/TEXT/BLOB header保存长度， 后面存内容
-* TIME/DATE/TIMESTAMP 64位整数
+- INTEGER/BIGINT/SMALLINT/TINYINT 为C/C++数据大小即可
+- FLOAT/REAL ---IEEE-754 标准 NUMERIC/DECIMAL 定点浮点数
+- VARCHAR/VARBINARY/TEXT/BLOB header保存长度， 后面存内容
+- TIME/DATE/TIMESTAMP 64位整数
 
 ### Large Value
 
@@ -155,9 +155,9 @@ Can physically denormalize(e.g., "prejoin") related tuples and store them togeth
 
 为保存超过1page的数据， DBMS使用overflow storage pages
 
-* Postgres： TOAST (>2KB)
-* MySQL: Overflow( > 1/2 size of page)
-* SQL Server: Overflow( > size of page)
+- Postgres： TOAST (>2KB)
+- MySQL: Overflow( > 1/2 size of page)
+- SQL Server: Overflow( > size of page)
 
 ![image-20240415002840571](https://s2.loli.net/2024/04/15/pmhaAoB8lTWeVjN.png)
 
@@ -165,8 +165,8 @@ External Value Storage
 
 一些系统使用BLOB类型在外部文件中保存大型数据
 
-* Oracle： BFILE 
-* Microsoft： FILESTREAM
+- Oracle： BFILE
+- Microsoft： FILESTREAM
 
 DBMS无法直接管理这些内容
 
@@ -174,10 +174,8 @@ DBMS无法直接管理这些内容
 
 ## 系统目录
 
-* 将元组信息抽象
-* 在引导列表使用特定编码（INFORMATION_SCHEMA）
-
-
+- 将元组信息抽象
+- 在引导列表使用特定编码（INFORMATION_SCHEMA）
 
 **关系模型由于没有将全部的tuple表存在一个page中，在某些情况下工作性能不是很好 **
 
@@ -211,10 +209,10 @@ On-line Analytical Processing:
 
 ![image-20240415004639542](https://s2.loli.net/2024/04/15/MSLFDqeC3rsa1mT.png)
 
-优点： 
+优点：
 
-* 增删查快
-* 对于需要一整个tuple的场景性能非常好
+- 增删查快
+- 对于需要一整个tuple的场景性能非常好
 
 缺点： 查找一次会读取一整行， 但是有时只需要一辆列上的数据
 
@@ -226,9 +224,9 @@ On-line Analytical Processing:
 
 对于tuple中值的定位
 
-* 固定column的长度
+- 固定column的长度
 
-* 保存在tuple上的id
+- 保存在tuple上的id
 
 大多是都用第一种
 
@@ -236,9 +234,9 @@ On-line Analytical Processing:
 
 优点：
 
-* 避免IO浪费
+- 避免IO浪费
 
-* 更好的查询处理和数据压缩
+- 更好的查询处理和数据压缩
 
 缺点：
 
@@ -248,6 +246,5 @@ On-line Analytical Processing:
 
 对于特殊场景
 
-* OLTP -> 行存储
-* OLAP -> 列存储
-
+- OLTP -> 行存储
+- OLAP -> 列存储
