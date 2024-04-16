@@ -26,8 +26,8 @@ alter： 修改
 
 事务控制语言， 包括：
 
-* 事务提交： commit
-* 事务回滚： rollback
+- 事务提交： commit
+- 事务回滚： rollback
 
 ## DCL
 
@@ -45,9 +45,7 @@ desc 表名
 > desc dept;
 ```
 
-
-
-#  常用命令
+# 常用命令
 
 ## 查看mysql版本
 
@@ -85,13 +83,11 @@ select 字段名 from 表名；
 select deptno, dname from dept;
 ```
 
-
-
 ### 查询所有字段
 
-使用* 号
+使用\* 号
 
-**但是效率低， 可读性差** 
+**但是效率低， 可读性差**
 
 ### 给查询的列起别名
 
@@ -129,18 +125,18 @@ select ename, sal*12 from emp;
 
 ### 条件查询
 
-| =                       | 等于                                                |
-| ----------------------- | --------------------------------------------------- |
-| <> 或  !=               | 不等于                                              |
-| < , <=                  | 小于  小于等于                                      |
-| >, >=                   | 大于  大于等于                                      |
-| between ... and ...     | 两个值之间, 使用时需要遵循左小右大                  |
-| is null ( is not null ) | 为空（不为空）                                      |
-| and                     | 并且                                                |
-| or                      | 或                                                  |
-| in                      | 包含， 相当于多个or                                 |
-| not                     | 非                                                  |
-| like                    | 模糊查询（%任意个字符匹配， _下划线只匹配一个字符） |
+| =                       | 等于                                                 |
+| ----------------------- | ---------------------------------------------------- |
+| <> 或 !=                | 不等于                                               |
+| < , <=                  | 小于 小于等于                                        |
+| >, >=                   | 大于 大于等于                                        |
+| between ... and ...     | 两个值之间, 使用时需要遵循左小右大                   |
+| is null ( is not null ) | 为空（不为空）                                       |
+| and                     | 并且                                                 |
+| or                      | 或                                                   |
+| in                      | 包含， 相当于多个or                                  |
+| not                     | 非                                                   |
+| like                    | 模糊查询（%任意个字符匹配， \_下划线只匹配一个字符） |
 
 ```
 select empno, ename from emp where sal = 800;
@@ -197,7 +193,7 @@ select ename, sal from emp order by 2;
 
 #### 常见单行处理函数
 
-lower  转换小写, upper 转化大写
+lower 转换小写, upper 转化大写
 
 ```
 select lower(ename) as ename from emp;
@@ -237,15 +233,11 @@ ifnull 可以将null 转换成一个特定的值
 select ename, sal + ifnull(comm, 0) as salcomm from emp;
 ```
 
-
-
 rand生成随机数
 
 ```
 select rand() from emp;
 ```
-
-
 
 ```
 select round(rand() * 100.0) from emp; // 100以内随机数
@@ -267,7 +259,7 @@ select round(1236.567, 0) as result from emp;		//0表示保留小数位
 
 **若没有对数据分组， 默认整个表为一个组**
 
-	### DISTINCT
+### DISTINCT
 
 COUNT, SUM, AVG support DISTINCT
 example: Get the number of unique students that have an "@cs" longin.
@@ -278,7 +270,7 @@ SELECT COUNT(DISTINCT login) FROM student WHERE login LIKE '@cs';
 
 ### GROUP BY
 
-Project tuples into subsets and calculate aggregates against  each subset.  
+Project tuples into subsets and calculate aggregates against each subset.
 
 ### HAVING
 
@@ -290,21 +282,18 @@ GROUP BY e.cid
 HAVING avg_gpa > 3.9;
 ```
 
-
-
 ### String Operations
 
 '%' Matches any substring (including empty strings)
 
-'_' Match any one character.
+'\_' Match any one character.
 
 String Functions: SUBSTRING UPPER TRIM
-
- 
 
 ### Data/Time Operations
 
 example: Get the day between spcified two date.
+
 ```sql
 //get Current date.
 SELECT CURRENT_TIMESTAMP();
@@ -336,8 +325,6 @@ CREATE TABLE CourseIds(
 );
 ```
 
-
-
 Insert tuples from query into another table:
 -> Inner SELECT must generate the same columns as the target table.
 
@@ -351,7 +338,7 @@ INSERT INTO CourseIds(
 
 ### Output Control
 
-ORDER BY <column*> [ASC | DESC]
+ORDER BY <column\*> [ASC | DESC]
 
 -> Order the output tuples by the values in one or more of their columns.
 
@@ -365,8 +352,6 @@ WHERE cid = '15-721'
 ORDER BY grade DESC, sid ASC;
 ```
 
-
-
 LIMIT <count> [offset]
 
 -> Limit the # of tuples returned in output.
@@ -379,7 +364,7 @@ WHERE login LIKE '%@cs'
 LIMIT 20 OFFSET 10
 ```
 
- ### Nested Queries
+### Nested Queries
 
 Queries containing other queries.
 
@@ -398,8 +383,6 @@ ANY-> Nust satisfy expression for at least one row in sub-query
 IN -> Equivalent to '=ANY()'.
 
 EXISTS -> At least one row is returned.
-
-
 
 ```sql
 SELECT (SELECT S.name FROM student AS S WHERE S.sid = E.sid) AS sname FROM enrolled as E WHERE cid ='15-445'
@@ -436,13 +419,11 @@ SELECT * FROM course WHERE NOT EXISTS(
 
 Performs a calculation across a set of tuples that related to a single row.
 
-Like an aggregation but tuples  are not grouped into a single output tuples.
+Like an aggregation but tuples are not grouped into a single output tuples.
 
 ```sql
-SELECT ...FUNC_NAME(...) OVER FROM tableName; 
+SELECT ...FUNC_NAME(...) OVER FROM tableName;
 ```
-
-
 
 Aggregation functions:
 
@@ -457,8 +438,6 @@ Special window functions:
 ```sql
 SELECT *, ROW_NUMBER() OVER() AS row_number FROM enrolled;
 ```
-
-
 
 The OVER keyword specifies how to group together tuples when computing the window function.
 
@@ -478,13 +457,11 @@ ROW_NUMBER() OVER (ORDER BY cid)
 FROM enrolled ORDER BY cid;
 ```
 
-
-
 Find the student with the highest grade for each course.
 
 ```sql
 SELECT * FROM(
-    SELECT *, 
+    SELECT *,
     RANK() OVER(PARTITION BY cid ORDER BY grade ASC)
     AS rank
     FROM enrolled
@@ -506,8 +483,6 @@ WITH cteName AS(
 SELECT * FROM cteName;
 ```
 
- 
-
 You can bind output columns to names before the AS keyword.
 
 ```sql
@@ -517,17 +492,15 @@ WITH cteName(col1, col2) AS(
 SELECT col1 + col2 FROM ctetName;
 ```
 
- example: Find student record with the highest id that is enrolled in at least one course.
+example: Find student record with the highest id that is enrolled in at least one course.
 
 ```sql
 WITH cteSource(maxId) as(
     SELECT MAX(sid) FROM enrolled
-) 
+)
 
 SELECT name FROM student, cteSource WHERE student.sid = cteSource.maxId;
 ```
-
-
 
 Print the sequence of numbers from 1 to 10.
 
@@ -551,18 +524,18 @@ CREATE USER userName identified by password;
 CREATE USER userName;
 ```
 
- ### 用户授权
+### 用户授权
 
- ```sql
- GRANT ALL(Alter, Create...., Permission n) on database.table to user [with grant option]
- ```
+```sql
+GRANT ALL(Alter, Create...., Permission n) on database.table to user [with grant option]
+```
 
-all代表授予所有权限， 数据库的表使用*代表全部，with grant option表示权限可转让。
+all代表授予所有权限， 数据库的表使用\*代表全部，with grant option表示权限可转让。
 
 使用revoke可以进行回收
 
 ```sql
-revoke all| Permission1, Permission2 on database.table to user 
+revoke all| Permission1, Permission2 on database.table to user
 ```
 
 ### 视图
@@ -581,12 +554,12 @@ WITH CHECK OPTION 指当创建后如果要更新视图中的数据，是否要�
 DROP VIEW viewName;
 ```
 
-* 若视图由两个以上基本表导出，则此视图不允许更新。
-* 若视图的字段来自字段表达式或常数，则不允许更新。
-* 若字段来自集函数，则不允许更新
-* 若含有DISTINCT短语则不允许更新
-* 若含有嵌套查询并且内层的FROM子句涉及的表也是导出该视图的基本表，则不允许更新。
-* 一个不允许更新的视图上定义的视图也不允许更新。
+- 若视图由两个以上基本表导出，则此视图不允许更新。
+- 若视图的字段来自字段表达式或常数，则不允许更新。
+- 若字段来自集函数，则不允许更新
+- 若含有DISTINCT短语则不允许更新
+- 若含有嵌套查询并且内层的FROM子句涉及的表也是导出该视图的基本表，则不允许更新。
+- 一个不允许更新的视图上定义的视图也不允许更新。
 
 ### 索引
 
@@ -603,9 +576,9 @@ SHOW INDEX FROM tableName;
 DROP INDEX indexName ON tableName(columnName);
 ```
 
- ### 触发器
+### 触发器
 
-操作时会生成两个表为new和old. 
+操作时会生成两个表为new和old.
 
 ```sql
 CREATE TRIGGER triggerName [BEFORE|AFTER] [INSERT|UPDATE|DELETE] ON tableName|viewName FOR EACH ROW DELETE FROM student WHERE student.sno = new.sno;
@@ -622,4 +595,3 @@ SHOW TRIGGER;
 ```sql
 DROP TRIGGER triggerName;
 ```
-
