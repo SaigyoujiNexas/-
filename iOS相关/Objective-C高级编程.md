@@ -1,19 +1,22 @@
 # 自动引用计数
-| 对象操作 | OC方法 |
-| ---------| ------ |
+
+| 对象操作 | OC方法             |
+| -------- | ------------------ |
 | 生成对象 | alloc, new, copy等 |
-| 持有对象 | retain方法 |
-| 释放对象 | release方法 |
-| 废弃方法 | dealloc方法 |
+| 持有对象 | retain方法         |
+| 释放对象 | release方法        |
+| 废弃方法 | dealloc方法        |
 
 for a pointer point to an object, it will be
+
 ```objective-c
 - (BOOL) performOperationWithError(NSError **)error;
 
 //will compile to
 - (BOOL) performOperationWithError(NSError * __autoreleasing *) error;
 ```
-A variable marked with __autoreleasing will be registered to autoreleasepool, and get the object
+
+A variable marked with \_\_autoreleasing will be registered to autoreleasepool, and get the object
 
 ```objective-c
 NSError __strong *error = nil;
@@ -32,12 +35,15 @@ malloc 默认不将申请的内存设置为0, 会指向一个不确定的内存�
 释放内存时需要将内容对象置为nil, free不会做这件事
 
 对于以下命令
+
 ```objective-c
 {
     id __strong obj = [NSMutableArray array];
 }
 ```
+
 会编译成
+
 ```objective-c
 {
     id obj = objc_msg_Send(NSMutableArray @selector(array));
@@ -47,6 +53,7 @@ malloc 默认不将申请的内存设置为0, 会指向一个不确定的内存�
 ```
 
 NSArray:
+
 ```objective-c
 + (id) array{
     id obj = objc_msgSend(NSMutableArray, @selector(alloc));
@@ -58,11 +65,12 @@ NSArray:
 作用: 不让array中的obj对象注册到ARC, 而是让调用者被注册到ARC上, 节省调用次数
 
 Core Foundation 框架转换NS框架时
-__bridge: 不变更计数
-__bridge_transfer: 释放掉右值
-__bridge_retained: 右值对象增加引用计数(左值获得了一份所有权)
+**bridge: 不变更计数
+**bridge_transfer: 释放掉右值
+\_\_bridge_retained: 右值对象增加引用计数(左值获得了一份所有权)
 
 对weak类型进行调用时,编译器会进行tmp变量创建
+
 ```objective-c
 {
     id __weak obj1 = obj;
@@ -80,10 +88,11 @@ __bridge_retained: 右值对象增加引用计数(左值获得了一份所有权
     objc_destroyWeak(&obj1);
 }
 ```
+
 一次调用就创建一个tmp
 十次就是十个
 
-__autoreleasing 修饰符等价于ARC无效的autorelease方法
+\_\_autoreleasing 修饰符等价于ARC无效的autorelease方法
 
 # Blocks
 
@@ -93,23 +102,25 @@ __autoreleasing 修饰符等价于ARC无效的autorelease方法
 }
 ```
 
-block对截获变量的mutable为__block 关键字
+block对截获变量的mutable为\_\_block 关键字
+
 ```objective-c
 __block int val = 0;
 void (^blk)(void) = ^{val = 1; };
 blk();
 printf("val = %d\n", val);
 ```
+
 block 无法获取C语言数组中的值,但是指针可以
 
 ## Block语法转换
+
 ```objective-c
 int main(int argc, const char * args[]){
     void (^blk) (void) = ^{ printf("Block\n");};
     blk();
     return 0;
 ```
-
 
 ```objective-c++
 struct __block_impl{
@@ -144,7 +155,7 @@ static struct __main_block_desc_0 {
 };
 
 int main(){
-void (*blk) (void) = 
+void (*blk) (void) =
     (void (*) (void)) &__main_block_impl_0(
         (void *)__main_block_func_0, &__main_block_desc_0_DATA);
 
@@ -153,8 +164,8 @@ void (*blk) (void) =
 }
 
 ```
-对于截获变量lambda
 
+对于截获变量lambda
 
 ```objective-c++
 
@@ -204,6 +215,7 @@ void (*blk) (void) = (void (*) (void)) &__main_block_impl_0((void *)__main_block
 ```
 
 mutable 截获变量的转换
+
 ```objective-c++
 struct __Block_byref_val_0{
         void *__isa;
@@ -276,13 +288,14 @@ val 相当于原来的自动变量的成员变量
 
 Block的类有三种:
 
-- _NSConcreteStackBlock
-- _NSConcreteGlobalBlock
-- _NSConcreteMallocBlock
+- \_NSConcreteStackBlock
+- \_NSConcreteGlobalBlock
+- \_NSConcreteMallocBlock
 
 分别对应程序的栈区, 数据区, 堆区
 
 解决由于截获变量被释放与block所在作用域释放导致block内部数据无法索引的问题, 编译器会自动将block转移到堆
+
 ```objective-c++
 blk_t func(int rate){
     blk_t tmp = &__func_block_impl_0(
@@ -291,22 +304,27 @@ blk_t func(int rate){
     return objc_autoreleaseReturnValue(tmp);
 }
 ```
+
 objc_ratainBlock内部
+
 ```objective-c++
 tmp = _Block_copy(tmp);
 return objc_autoreleaseReturnValue(tmp);
 ```
-当截获变量即将被释放时,调用_Block_copy函数, 会调用__main_block_copy_0调用将__block变量所有权转移
-block被释放时会调用__main_block_dispose来释放截获变量
-Block 可能导致循环引用(持有外部引用), 记得用__weak, 好用
+
+当截获变量即将被释放时,调用\_Block_copy函数, 会调用**main_block_copy_0调用将**block变量所有权转移
+block被释放时会调用**main_block_dispose来释放截获变量
+Block 可能导致循环引用(持有外部引用), 记得用**weak, 好用
 
 # GCD
 
 ## 线程队列
+
 - Serial Dispatch Queue 单线程池
 - Concurrent Dispatch Queue 多线程池
 
 dispatch queue 需要手动释放, 这个不归ARC管
+
 ```objective-c
 dispatch_release(mySerialDispatchQueue);
 ```
@@ -314,11 +332,10 @@ dispatch_release(mySerialDispatchQueue);
 变更队列优先级:
 
 ```objective-c
-dispatch_queue_t globalDispatchQueueBackground = 
+dispatch_queue_t globalDispatchQueueBackground =
     dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0);
 dispatch_set_target_queue(mySerialDispatchQueue, globalDispatchQueueBackground);
 ```
-
 
 ## 调用函数
 
@@ -341,6 +358,3 @@ dispatch_set_target_queue(mySerialDispatchQueue, globalDispatchQueueBackground);
 - dispatch_io_set_low_water 设定一个线程读多少
 - dispatch_io_read 开始读取
 - dispatch_data_create_map 组装多线程读取的data
-
-
-
